@@ -17,7 +17,8 @@ const data = entry.data;
 const cleanPath = (path) => {
   if (!path) return null;
   const noTag = path.replace('?grid', '');
-  if (noTag.startsWith('http')) return noTag; // Safely bypasses local formatting for external links
+  // Safely bypasses local formatting for external links
+  if (noTag.startsWith('http')) return noTag; 
   return encodeURI(noTag.replace(/^\/?public\/?/, '/'));
 };
 
@@ -26,6 +27,15 @@ const isVideo = (path) => {
   const noTag = path.replace('?grid', '');
   return noTag.match(/\.(mp4|webm|mov)$/i);
 };
+
+// NEW: Detects external video hosting platforms
+const isEmbed = (path) => {
+  if (!path) return false;
+  const noTag = path.replace('?grid', '');
+  return noTag.includes('youtube.com') || noTag.includes('youtu.be') || noTag.includes('vimeo.com');
+};
+
+const isMediaBlock = (path) => isVideo(path) || isEmbed(path);
 
 const projectIdentifier = entry.slug || entry.id || '';
 
@@ -67,10 +77,10 @@ let textInjectionCount = 0;
 let videoCount = 0;
 
 galleryMedia.forEach(rawSrc => {
-  // FIX: Read the new tag
   const isExplicitGrid = rawSrc.includes('?grid');
   
-  if (isVideo(rawSrc) && !isExplicitGrid) {
+  // Checks for BOTH local videos and external embeds
+  if (isMediaBlock(rawSrc) && !isExplicitGrid) {
     if (currentImageChunk.length > 0) {
       layoutBlocks.push({ type: 'images', items: currentImageChunk });
       currentImageChunk = [];
@@ -140,20 +150,15 @@ if (currentImageChunk.length > 0) {
       )}
     </header>
 
+    {/* HERO EMBED SUPPORT */}
     {data.heroSrc && (
-      <div style={`width: 100vw; background: rgba(0, 85, 255, 0.02); margin-bottom: 120px; display: flex; justify-content: center; align-items: center; overflow: hidden; ${data.heroOrientation === 'crop' ? 'aspect-ratio: 16/9; max-height: 70vh;' : ''}`}>
-        {data.heroType === 'video' || isVideo(data.heroSrc) ? (
-          <video 
-            src={cleanPath(data.heroSrc)} 
-            autoplay loop muted playsinline 
-            style={data.heroOrientation === 'crop' ? "width: 100%; height: 100%; object-fit: cover; display: block;" : "width:100%; height:auto; display:block;"}
-          ></video>
+      <div style={`width: 100vw; background: rgba(0, 85, 255, 0.02); margin-bottom: 120px; display: flex; justify-content: center; align-items: center; overflow: hidden; ${data.heroOrientation === 'crop' || isEmbed(data.heroSrc) ? 'aspect-ratio: 16/9; max-height: 70vh;' : 'aspect-ratio: 16/9;'}`}>
+        {isEmbed(data.heroSrc) ? (
+          <iframe src={cleanPath(data.heroSrc)} allow="autoplay; fullscreen; picture-in-picture" style="width: 100%; height: 100%; border: none;"></iframe>
+        ) : data.heroType === 'video' || isVideo(data.heroSrc) ? (
+          <video src={cleanPath(data.heroSrc)} autoplay loop muted playsinline style={data.heroOrientation === 'crop' ? "width: 100%; height: 100%; object-fit: cover; display: block;" : "width:100%; height:100%; display:block;"}></video>
         ) : (
-          <img 
-            src={cleanPath(data.heroSrc)} 
-            alt="Hero" 
-            style={data.heroOrientation === 'crop' ? "width: 100%; height: 100%; object-fit: cover; display: block;" : "width:100%; height:auto; display:block;"} 
-          />
+          <img src={cleanPath(data.heroSrc)} alt="Hero" style={data.heroOrientation === 'crop' ? "width: 100%; height: 100%; object-fit: cover; display: block;" : "width:100%; height:auto; display:block;"} />
         )}
       </div>
     )}
@@ -184,8 +189,8 @@ if (currentImageChunk.length > 0) {
           if (block.type === 'text' && block.id === 'ec-sec-3') {
             return (
               <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
-                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Experience Center Singapore</h2>
-                <p>Production of visual assets, both digital and print, to refine brand and spatial design across the center. Asset management, print works, and video production.</p>
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Partner Exhibition Pods</h2>
+                <p>Automated and streamlined the administrative organization of design assets for partner pods, ensuring rapid, scalable deployment of on-brand exhibition materials globally.</p>
               </div>
             );
           }
@@ -194,7 +199,9 @@ if (currentImageChunk.length > 0) {
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; gap: 10px; margin-bottom: 120px;">
                 {block.items.map(src => (
                   <div style="grid-column: span 1; width: 100%; aspect-ratio: 4/3;">
-                    {isVideo(src) ? (
+                    {isEmbed(src) ? (
+                      <iframe src={cleanPath(src)} allow="autoplay; fullscreen" style="width: 100%; height: 100%; border: none;"></iframe>
+                    ) : isVideo(src) ? (
                       <video src={cleanPath(src)} autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>
                     ) : (
                       <img src={cleanPath(src)} alt="Experience Center Media" style="width:100%; height:100%; object-fit:cover; display:block;" />
@@ -215,17 +222,24 @@ if (currentImageChunk.length > 0) {
         {layoutBlocks.map(block => {
           if (block.type === 'video') {
             return (
-              <div style="width: 100%; margin-bottom: 80px; background: rgba(0, 85, 255, 0.02);">
-                <video src={cleanPath(block.src)} autoplay loop muted playsinline style="width:100%; height:auto; display:block;"></video>
+              <div style="width: 100%; margin-bottom: 80px; background: rgba(0, 85, 255, 0.02); aspect-ratio: 16/9;">
+                {isEmbed(block.src) ? (
+                  <iframe src={cleanPath(block.src)} allow="autoplay; fullscreen" style="width: 100%; height: 100%; border: none;"></iframe>
+                ) : (
+                  <video src={cleanPath(block.src)} autoplay loop muted playsinline style="width:100%; height:100%; display:block; object-fit:cover;"></video>
+                )}
               </div>
             );
           }
+          
           if (block.type === 'images') {
             return (
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; gap: 10px; margin-bottom: 80px;">
                 {block.items.map(src => (
                   <div style="grid-column: span 1; width: 100%; aspect-ratio: 4/3;">
-                    {isVideo(src) ? (
+                    {isEmbed(src) ? (
+                      <iframe src={cleanPath(src)} allow="autoplay; fullscreen" style="width: 100%; height: 100%; border: none;"></iframe>
+                    ) : isVideo(src) ? (
                       <video src={cleanPath(src)} autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>
                     ) : (
                       <img src={cleanPath(src)} alt="Project Gallery Media" style="width:100%; height:100%; object-fit:cover; display:block;" />
@@ -312,9 +326,15 @@ if (currentImageChunk.length > 0) {
             </div>
           </div>
         )}
+
+        {/* FINAL VIDEO EMBED SUPPORT */}
         {isSapphire && data.bottomVideoSrc && (
-          <div style="width: 100%; margin-bottom: 80px; background: rgba(0, 85, 255, 0.02);">
-            <video src={cleanPath(data.bottomVideoSrc)} autoplay loop muted playsinline style="width:100%; height:auto; display:block;"></video>
+          <div style="width: 100%; margin-bottom: 80px; background: rgba(0, 85, 255, 0.02); aspect-ratio: 16/9;">
+            {isEmbed(data.bottomVideoSrc) ? (
+              <iframe src={cleanPath(data.bottomVideoSrc)} allow="autoplay; fullscreen" style="width: 100%; height: 100%; border: none;"></iframe>
+            ) : (
+              <video src={cleanPath(data.bottomVideoSrc)} autoplay loop muted playsinline style="width:100%; height:100%; display:block; object-fit: cover;"></video>
+            )}
           </div>
         )}
       </div>

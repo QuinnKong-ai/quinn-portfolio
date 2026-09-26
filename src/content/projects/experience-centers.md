@@ -23,8 +23,8 @@ img5: "/images/IMG_0997.jpg"
 img6: "/images/IMG_1032.jpg"
 
 # SECTION 2 (NYFW - Images 7-12)
-img7: ""
-img8: ""
+img7: "https://www.youtube.com/embed/v4_rIy-OS34?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1?grid"
+img8: "https://www.youtube.com/embed/PWypuseUrbI?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1?grid"
 img9: "/images/@NEDYO__DSC_9360.jpg"
 img10: "/images/@NEDYO_PANELTALKS37.jpg"
 img11: "/images/InnovationLab-@nyfwcollections-@ashjgiles-@madness.nyc--19.jpg"

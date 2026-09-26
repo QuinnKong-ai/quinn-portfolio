@@ -11,8 +11,7 @@ order: 1
 
 # THE HERO MEDIA
 heroType: "video"
-# Swapped to an external link to bypass GitHub limits
-heroSrc: ""
+heroSrc: "https://www.youtube.com/embed/A0cb8c4SHrM?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1"
 
 # THE SECONDARY FULL-WIDTH MEDIA (Intro Video)
 secondarySrc: ""
@@ -24,9 +23,10 @@ img3: "/images/SAP Sapphire 2026-Clean-WEB-50.jpg"
 img4: "/images/SAP Sapphire 2026-Clean-WEB-14.jpg"
 
 # BLOCK 2: The Two Swapped Videos 
+# Removed the ?grid tag here so it becomes full-width again
 img5: "/videos/Sapphire snippet.mp4"
-# Swapped the massive 4K video to an external link
-img6: ""
+# The massive YouTube embed
+img6: "https://www.youtube.com/embed/8kJOkRoMPMY?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1"
 
 # BLOCK 3: The Next 4 Pictures
 img7: "/videos/sequenc storyboard.mp4?grid"
@@ -45,7 +45,7 @@ resultImg1: ""
 resultImg2: ""
 resultImg3: ""
 
-bottomVideoSrc: ""
+bottomVideoSrc: "https://www.youtube.com/embed/A0cb8c4SHrM?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1"
 ---
 
 SAP Sapphire is the flagship annual destination for over 12,000 enterprise software industry leaders. For the 2026 event, I had the privilege of playing a core supportive role in driving the visual and experience design for SAP's biggest Experience Center.
