@@ -1,0 +1,36 @@
+---
+// src/layouts/BaseLayout.astro
+import '../styles/global.css';
+const { title = "Quinn | Portfolio" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  
+  <!-- Prevents the white flash on reload -->
+  <script is:inline>
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark-theme');
+    }
+  </script>
+  
+  <style is:global>
+    /* Inverts the variables globally when dark-theme is active */
+    html.dark-theme {
+      --bg-color: #111111;
+      --text-main: #e5e5e5;
+    }
+    
+    body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <slot />
+</body>
+</html>

@@ -1,0 +1,382 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const projectEntries = await getCollection('projects');
+  return projectEntries.map(entry => ({
+    params: { slug: entry.slug || entry.id }, 
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const data = entry.data;
+
+const cleanPath = (path) => {
+  if (!path) return null;
+  const noTag = path.replace('?grid', '');
+  if (noTag.startsWith('http')) return noTag; // Safely bypasses local formatting for external links
+  return encodeURI(noTag.replace(/^\/?public\/?/, '/'));
+};
+
+const isVideo = (path) => {
+  if (!path) return false;
+  const noTag = path.replace('?grid', '');
+  return noTag.match(/\.(mp4|webm|mov)$/i);
+};
+
+const projectIdentifier = entry.slug || entry.id || '';
+
+const isSapphire = projectIdentifier.toLowerCase().includes('sapphire') || (data.title && data.title.toLowerCase().includes('sapphire'));
+const isNrf = projectIdentifier.toLowerCase().includes('nrf') || projectIdentifier.toLowerCase().includes('hannover') || (data.title && (data.title.toLowerCase().includes('nrf') || data.title.toLowerCase().includes('hannover')));
+const isExperienceCenters = projectIdentifier.toLowerCase().includes('experience') || (data.title && data.title.toLowerCase().includes('experience centers'));
+
+const ecBlocks = [];
+if (isExperienceCenters) {
+  const allEcImages = [ ...Array.from({length: 18}, (_, i) => data[`img${i + 1}`]) ].filter(Boolean);
+  
+  if (allEcImages.slice(0, 6).length > 0) {
+    ecBlocks.push({ type: 'text', id: 'ec-sec-1' });
+    ecBlocks.push({ type: 'images', items: allEcImages.slice(0, 6) });
+  }
+  if (allEcImages.slice(6, 12).length > 0) {
+    ecBlocks.push({ type: 'text', id: 'ec-sec-2' });
+    ecBlocks.push({ type: 'images', items: allEcImages.slice(6, 12) });
+  }
+  if (allEcImages.slice(12, 18).length > 0) {
+    ecBlocks.push({ type: 'text', id: 'ec-sec-3' });
+    ecBlocks.push({ type: 'images', items: allEcImages.slice(12, 18) });
+  }
+}
+
+const galleryMedia = [
+  data.wideSrc1,
+  data.wideSrc2,
+  data.secondarySrc,
+  ...Array.from({length: 14}, (_, i) => data[`img${i + 1}`]),
+  data.resultImg1,
+  data.resultImg2,
+  data.resultImg3
+].filter(Boolean);
+
+const layoutBlocks = [];
+let currentImageChunk = [];
+let textInjectionCount = 0;
+let videoCount = 0;
+
+galleryMedia.forEach(rawSrc => {
+  // FIX: Read the new tag
+  const isExplicitGrid = rawSrc.includes('?grid');
+  
+  if (isVideo(rawSrc) && !isExplicitGrid) {
+    if (currentImageChunk.length > 0) {
+      layoutBlocks.push({ type: 'images', items: currentImageChunk });
+      currentImageChunk = [];
+      textInjectionCount++;
+      if (textInjectionCount === 1) layoutBlocks.push({ type: 'text', id: 'deep-dive' });
+      if (textInjectionCount === 2) layoutBlocks.push({ type: 'text', id: 'impact' });
+    }
+    
+    layoutBlocks.push({ type: 'video', src: rawSrc });
+    videoCount++;
+    
+    if (videoCount === 1) {
+      layoutBlocks.push({ type: 'text', id: 'mid-video' });
+    }
+    if (videoCount === 2) {
+      layoutBlocks.push({ type: 'text', id: 'video-text' });
+    }
+    
+  } else {
+    currentImageChunk.push(rawSrc);
+    if (currentImageChunk.length === 4) {
+      layoutBlocks.push({ type: 'images', items: currentImageChunk });
+      currentImageChunk = [];
+      textInjectionCount++;
+      if (textInjectionCount === 1) layoutBlocks.push({ type: 'text', id: 'deep-dive' });
+      if (textInjectionCount === 2) layoutBlocks.push({ type: 'text', id: 'impact' });
+    }
+  }
+});
+
+if (currentImageChunk.length > 0) {
+  layoutBlocks.push({ type: 'images', items: currentImageChunk });
+}
+---
+
+<BaseLayout title={`Quinn | ${data.title}`} currentPath="work">
+  <main class="project-page-container" style="padding: 120px 0 0 0; overflow-x: hidden; position: relative;">
+    
+    <div style="max-width: 1000px; margin: 0 auto 60px; padding: 0 40px;">
+      <a href="/" style="text-decoration: none; color: var(--accent); font-weight: 500; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; transition: opacity 0.2s ease;">
+        ← Back to Index
+      </a>
+    </div>
+
+    <header style="max-width: 1000px; margin: 0 auto 80px; padding: 0 40px;">
+      <h1 style="font-weight: 300; text-transform: uppercase; font-size: 4.5rem; line-height: 1; margin-bottom: 24px; color: var(--accent); letter-spacing: -0.02em;">
+        {data.title}
+      </h1>
+      <p style="font-size: 1.5rem; font-weight: 300; color: var(--text-main); margin-bottom: 60px; max-width: 800px; line-height: 1.4;">
+        {data.subtitle}
+      </p>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 32px; font-size: 0.9rem; color: var(--text-main); margin-bottom: 40px;">
+        {data.role && <div><div style="opacity: 0.4; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; font-size: 0.7rem; letter-spacing: 0.05em;">Role</div> <div style="font-weight: 400; font-size: 1.05rem;">{data.role}</div></div>}
+        {data.company && <div><div style="opacity: 0.4; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; font-size: 0.7rem; letter-spacing: 0.05em;">Client</div> <div style="font-weight: 400; font-size: 1.05rem;">{data.company}</div></div>}
+        {data.year && <div><div style="opacity: 0.4; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; font-size: 0.7rem; letter-spacing: 0.05em;">Year</div> <div style="font-weight: 400; font-size: 1.05rem;">{data.year}</div></div>}
+      </div>
+
+      {data.tools && data.tools.length > 0 && (
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px;">
+          {data.tools.map((tool: unknown) => (
+            <span style="background: rgba(0, 85, 255, 0.06); color: var(--accent); padding: 6px 18px; border-radius: 40px; font-size: 0.75rem; text-transform: uppercase; font-weight: 500; letter-spacing: 0.05em;">
+              {String(tool)}
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    {data.heroSrc && (
+      <div style={`width: 100vw; background: rgba(0, 85, 255, 0.02); margin-bottom: 120px; display: flex; justify-content: center; align-items: center; overflow: hidden; ${data.heroOrientation === 'crop' ? 'aspect-ratio: 16/9; max-height: 70vh;' : ''}`}>
+        {data.heroType === 'video' || isVideo(data.heroSrc) ? (
+          <video 
+            src={cleanPath(data.heroSrc)} 
+            autoplay loop muted playsinline 
+            style={data.heroOrientation === 'crop' ? "width: 100%; height: 100%; object-fit: cover; display: block;" : "width:100%; height:auto; display:block;"}
+          ></video>
+        ) : (
+          <img 
+            src={cleanPath(data.heroSrc)} 
+            alt="Hero" 
+            style={data.heroOrientation === 'crop' ? "width: 100%; height: 100%; object-fit: cover; display: block;" : "width:100%; height:auto; display:block;"} 
+          />
+        )}
+      </div>
+    )}
+
+    <div style="max-width: 900px; margin: 0 auto 100px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+      <Content />
+    </div>
+
+    {isExperienceCenters && ecBlocks.length > 0 && (
+      <div style="display: flex; flex-direction: column; width: 100%;">
+        {ecBlocks.map(block => {
+          if (block.type === 'text' && block.id === 'ec-sec-1') {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">IKEA Pop-up Store</h2>
+                <p>Led the visual and spatial design for the IKEA Pop-up Store located at SAP's headquarters in Walldorf. This included print and digital design, signages for the spaces, exterior visual material, and asset management. </p>
+              </div>
+            );
+          }
+          if (block.type === 'text' && block.id === 'ec-sec-2') {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">New York Fashion Week Pop-Up</h2>
+                <p>Curated spatial design and localized asset coordination for a high-profile retail pop-up during New York Fashion Week.</p>
+              </div>
+            );
+          }
+          if (block.type === 'text' && block.id === 'ec-sec-3') {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Experience Center Singapore</h2>
+                <p>Production of visual assets, both digital and print, to refine brand and spatial design across the center. Asset management, print works, and video production.</p>
+              </div>
+            );
+          }
+          if (block.type === 'images') {
+            return (
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; gap: 10px; margin-bottom: 120px;">
+                {block.items.map(src => (
+                  <div style="grid-column: span 1; width: 100%; aspect-ratio: 4/3;">
+                    {isVideo(src) ? (
+                      <video src={cleanPath(src)} autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>
+                    ) : (
+                      <img src={cleanPath(src)} alt="Experience Center Media" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    )}
+
+    {!isExperienceCenters && layoutBlocks.length > 0 && (
+      <div style="display: flex; flex-direction: column; width: 100%;">
+        
+        {layoutBlocks.map(block => {
+          if (block.type === 'video') {
+            return (
+              <div style="width: 100%; margin-bottom: 80px; background: rgba(0, 85, 255, 0.02);">
+                <video src={cleanPath(block.src)} autoplay loop muted playsinline style="width:100%; height:auto; display:block;"></video>
+              </div>
+            );
+          }
+          if (block.type === 'images') {
+            return (
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; gap: 10px; margin-bottom: 80px;">
+                {block.items.map(src => (
+                  <div style="grid-column: span 1; width: 100%; aspect-ratio: 4/3;">
+                    {isVideo(src) ? (
+                      <video src={cleanPath(src)} autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>
+                    ) : (
+                      <img src={cleanPath(src)} alt="Project Gallery Media" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          if (block.type === 'text' && block.id === 'deep-dive' && isSapphire) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 80px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Spatial Branding</h2>
+                <p>Orchestrated the physical visual identity across the Experience Center. This involved designing, prepping, and delivering large-scale print files for all architectural walls and directional signage, ensuring total brand consistency throughout the physical space.</p>
+              </div>
+            );
+          }
+
+          if (block.type === 'text' && block.id === 'impact' && isSapphire) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 80px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Interactive Multimedia Experience</h2>
+                <p>Engineered a localized multimedia installation detailing the construction of a stadium from a city planner's perspective. The exhibit physically mapped custom motion graphics over 3D-printed architectural models and a large-scale printed wall map, bridging physical and digital storytelling.</p>
+              </div>
+            );
+          }
+
+          if (block.type === 'text' && block.id === 'video-text' && isSapphire) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 80px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Introduction Video</h2>
+                <p>Collaborated closely with external design and motion graphics studios to produce the high-fidelity introduction video. I supported the structural development through research, storyboarding, and continuous asset coordination to set the exact atmospheric tone for the center.</p>
+              </div>
+            );
+          }
+
+          if (block.type === 'text' && block.id === 'deep-dive' && isNrf) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 80px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Asset Orchestration & Storyboards</h2>
+                <p>Managed end-to-end asset coordination for the exhibition. I also supported the structural storyboarding for event videos to ensure seamless digital integration.</p>
+              </div>
+            );
+          }
+
+          if (block.type === 'text' && block.id === 'mid-video' && isNrf) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 80px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Digital Touchpoints</h2>
+                <p>Developed UI and visual content for on-site physical installations, bridging software capabilities with engaging features like a smart mirror and an interactive padel game.</p>
+              </div>
+            );
+          }
+
+          if (block.type === 'text' && block.id === 'impact' && isNrf) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 80px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Spatial Media</h2>
+                <p>Produced bespoke video content tailored for large-scale video rails and ambient screens, driving immediate attention to core value propositions.</p>
+              </div>
+            );
+          }
+
+          return null;
+        })}
+        
+        {isSapphire && (
+          <div style="max-width: 1000px; margin: 40px auto 120px; padding: 0 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 60px; width: 100%;">
+            <div style="border-top: 2px solid var(--accent); padding-top: 24px;">
+              <div class="stat-counter" data-target="12" data-suffix="k+" style="font-size: clamp(4rem, 6vw, 5.5rem); font-weight: 300; color: var(--accent); line-height: 1; margin-bottom: 16px; letter-spacing: -0.04em;">0</div>
+              <div style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;">Industry Leaders</div>
+              <div style="font-size: 0.95rem; font-weight: 300; color: var(--text-main); opacity: 0.8; line-height: 1.5;">Enterprise software executives interacting with the space.</div>
+            </div>
+            <div style="border-top: 2px solid var(--accent); padding-top: 24px;">
+              <div class="stat-counter" data-target="1000" data-format="dot" style="font-size: clamp(4rem, 6vw, 5.5rem); font-weight: 300; color: var(--accent); line-height: 1; margin-bottom: 16px; letter-spacing: -0.04em;">0</div>
+              <div style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;">Square Meters</div>
+              <div style="font-size: 0.95rem; font-weight: 300; color: var(--text-main); opacity: 0.8; line-height: 1.5;">Total space provided for the Experience Center.</div>
+            </div>
+            <div style="border-top: 2px solid var(--accent); padding-top: 24px;">
+              <div class="stat-counter" data-target="123" style="font-size: clamp(4rem, 6vw, 5.5rem); font-weight: 300; color: var(--accent); line-height: 1; margin-bottom: 16px; letter-spacing: -0.04em;">0</div>
+              <div style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;">Guided Tours</div>
+              <div style="font-size: 0.95rem; font-weight: 300; color: var(--text-main); opacity: 0.8; line-height: 1.5;">Hand-tailored walkthroughs conducted for specialists.</div>
+            </div>
+          </div>
+        )}
+        {isSapphire && data.bottomVideoSrc && (
+          <div style="width: 100%; margin-bottom: 80px; background: rgba(0, 85, 255, 0.02);">
+            <video src={cleanPath(data.bottomVideoSrc)} autoplay loop muted playsinline style="width:100%; height:auto; display:block;"></video>
+          </div>
+        )}
+      </div>
+    )}
+  </main>
+</BaseLayout>
+
+<div id="custom-cursor" class="custom-cursor">
+  <div class="cursor-dot"></div>
+  <div id="cursor-coords" class="cursor-coords">X:0 Y:0</div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const customCursor = document.getElementById('custom-cursor');
+    const cursorCoords = document.getElementById('cursor-coords');
+
+    document.addEventListener('mousemove', (e) => {
+      if (customCursor && cursorCoords) {
+        customCursor.style.left = e.clientX + 'px';
+        customCursor.style.top = e.clientY + 'px';
+        cursorCoords.innerText = `X:${e.clientX} Y:${e.clientY}`;
+      }
+    });
+  });
+
+  const counters = document.querySelectorAll('.stat-counter');
+  
+  if (counters.length > 0) {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.getAttribute('data-target'), 10);
+          const suffix = el.getAttribute('data-suffix') || '';
+          const format = el.getAttribute('data-format') || '';
+          
+          let current = 0;
+          const step = Math.max(1, Math.ceil(target / 40)); 
+          
+          const updateCounter = () => {
+            current += step;
+            if (current > target) current = target;
+            
+            let display = current.toString();
+            if (format === 'dot' && current >= 1000) {
+              display = display.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+            
+            el.innerText = display + suffix;
+            
+            if (current < target) {
+              requestAnimationFrame(updateCounter);
+            }
+          };
+          
+          requestAnimationFrame(updateCounter);
+          obs.unobserve(el); 
+        }
+      });
+    }, { threshold: 0.5 }); 
+
+    counters.forEach(c => observer.observe(c));
+  }
+</script>

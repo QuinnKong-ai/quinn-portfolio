@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Quinn | Contact" currentPath="contact">
+  <main class="project-page-container" style="padding: 120px 0 0 0; overflow-x: hidden; position: relative; min-height: 80vh;">
+    
+    <!-- BACK BUTTON -->
+    <div style="max-width: 1200px; margin: 0 auto 120px; padding: 0 40px;">
+      <a href="/" style="text-decoration: none; color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; transition: opacity 0.2s ease;">
+        ← Back to Index
+      </a>
+    </div>
+
+    <!-- MASSIVE TYPOGRAPHIC INDEX LIST -->
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 40px; display: flex; flex-direction: column; gap: 80px;">
+        
+        <!-- Email -->
+        <div style="display: grid; grid-template-columns: 150px 1fr; align-items: baseline; gap: 24px;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--text-main); letter-spacing: 0.05em; opacity: 0.6;">
+            Email
+          </div>
+          <a href="mailto:quinnjanssens@gmail.com" class="hover-fade" style="font-size: clamp(2rem, 5vw, 4.5rem); font-weight: 300; color: var(--accent); text-decoration: none; letter-spacing: -0.02em; line-height: 1;">
+            quinnjanssens@gmail.com
+          </a>
+        </div>
+
+        <!-- Phone -->
+        <div style="display: grid; grid-template-columns: 150px 1fr; align-items: baseline; gap: 24px;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--text-main); letter-spacing: 0.05em; opacity: 0.6;">
+            Phone
+          </div>
+          <a href="tel:+32489419655" class="hover-fade" style="font-size: clamp(2rem, 5vw, 4.5rem); font-weight: 300; color: var(--accent); text-decoration: none; letter-spacing: -0.02em; line-height: 1;">
+            +32 489 41 96 55
+          </a>
+        </div>
+
+        <!-- LinkedIn -->
+        <div style="display: grid; grid-template-columns: 150px 1fr; align-items: baseline; gap: 24px;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--text-main); letter-spacing: 0.05em; opacity: 0.6;">
+            LinkedIn
+          </div>
+          <a href="https://www.linkedin.com/in/quinn-janssens-2b48a91a4" target="_blank" rel="noopener noreferrer" class="hover-fade" style="font-size: clamp(2rem, 5vw, 4.5rem); font-weight: 300; color: var(--accent); text-decoration: none; letter-spacing: -0.02em; line-height: 1;">
+            LinkedIn ↗
+          </a>
+        </div>
+
+        <!-- CV Download -->
+        <div style="display: grid; grid-template-columns: 150px 1fr; align-items: baseline; gap: 24px;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--text-main); letter-spacing: 0.05em; opacity: 0.6;">
+            Curriculum Vitae
+          </div>
+          <a href="/Quinn_CV.pdf" download class="hover-fade" style="font-size: clamp(2rem, 5vw, 4.5rem); font-weight: 300; color: var(--accent); text-decoration: none; letter-spacing: -0.02em; line-height: 1;">
+            Download CV ↓
+          </a>
+        </div>
+
+    </div>
+  </main>
+</BaseLayout>
+
+<!-- CUSTOM CURSOR -->
+<div id="custom-cursor" class="custom-cursor">
+  <div class="cursor-dot"></div>
+  <div id="cursor-coords" class="cursor-coords">X:0 Y:0</div>
+</div>
+
+<style>
+  /* Quick hover effect - massive blue text fades to dark charcoal */
+  .hover-fade {
+    transition: opacity 0.3s ease, color 0.3s ease;
+  }
+  .hover-fade:hover {
+    color: var(--text-main) !important;
+    opacity: 0.8;
+  }
+  
+  /* Mobile responsiveness for the grid */
+  @media (max-width: 768px) {
+    div[style*="grid-template-columns: 150px 1fr"] {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const customCursor = document.getElementById('custom-cursor');
+    const cursorCoords = document.getElementById('cursor-coords');
+
+    document.addEventListener('mousemove', (e) => {
+      if (customCursor && cursorCoords) {
+        customCursor.style.left = e.clientX + 'px';
+        customCursor.style.top = e.clientY + 'px';
+        cursorCoords.innerText = `X:${e.clientX} Y:${e.clientY}`;
+      }
+    });
+  });
+</script>

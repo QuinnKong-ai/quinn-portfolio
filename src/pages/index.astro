@@ -1,0 +1,218 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const rawProjects = await getCollection('projects');
+let localizedProjects = rawProjects && rawProjects.length > 0 
+  ? rawProjects.sort((a, b) => (a.data.order || 0) - (b.data.order || 0))
+  : [];
+
+const placeholders = [
+  { id: 'startup-cliq', slug: 'startup-cliq', data: { title: 'Start Up: CLIQ', year: '2026' } },
+  { id: 'archive', slug: 'archive', data: { title: 'Archive', year: '2026' } }
+];
+
+while (localizedProjects.length < 6 && placeholders.length > 0) {
+  // @ts-ignore
+  localizedProjects.push(placeholders.shift());
+}
+---
+
+<BaseLayout title="Quinn | Portfolio" currentPath="work">
+  <main class="homepage-layout">
+
+    <div id="custom-cursor" class="custom-cursor">
+      <div class="cursor-dot"></div>
+      <div id="cursor-coords" class="cursor-coords">X:0 Y:0</div>
+    </div>
+
+    <div class="content-wrapper">
+      
+      <aside class="left-sidebar">
+        <div class="sidebar-top">
+          <span class="logo-name">
+            Quinn <br> Janssens
+          </span>
+        </div>
+        
+        <div class="sidebar-bottom">
+          <div class="sidebar-block role-text">
+            Experience Design <br> Visual Orchestration
+          </div>
+
+          <div class="sidebar-block bio-text">
+            Designing visual experiences and narratives with the purpose of bringing people together. <br><br>
+            Currently at SAP, supporting and designing content for Global Tier-1 Events and Experience Centers.
+          </div>
+
+          <div class="sidebar-block nav-links">
+            <span>Last update: 2026</span> <br><br>
+            <a href="/contact">Contact ↗</a> <br><br>
+            <button id="theme-toggle" class="theme-btn">Dark Mode</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="right-panel">
+        <div class="index-container">
+          {localizedProjects.map((project, i) => {
+            const num = (i + 1).toString().padStart(2, '0');
+            const shortTitle = project.data.title ? project.data.title.split(' ').slice(0, 4).join(' ') : 'Project';
+            const rawYear = project.data.year || "2026";
+            const singleYear = rawYear.toString().split('-').pop().trim();
+            
+            const linkTarget = project.slug || project.id;
+            
+            return (
+              <a href={`/projects/${linkTarget}`} class="index-row">
+                <div class="col-num index-num">{num}</div>
+                <div class="col-title index-title">{shortTitle}</div>
+                <div class="col-year index-year text-right">{singleYear}</div>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
+    </div> 
+  </main>
+</BaseLayout>
+
+<style is:global>
+  .homepage-layout { 
+    color: var(--text-main) !important; 
+    padding: 0 5vw !important; 
+    max-width: 1800px !important; 
+    margin: 0 auto !important; 
+  }
+
+  .sidebar-bottom {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 32px !important;
+  }
+  
+  .sidebar-block {
+    margin: 0 !important; 
+    line-height: 1.5 !important;
+  }
+
+  .logo-name {
+    color: var(--accent) !important;
+    text-transform: uppercase !important;
+    font-size: clamp(1.5rem, 2.5vw, 2.5rem) !important;
+    line-height: 1 !important;
+    font-weight: 400 !important;
+  }
+
+  .index-row {
+    grid-template-columns: 100px 1fr 60px !important; 
+    align-items: center !important; 
+    padding: 2.2vh 0 !important; 
+    color: var(--text-main) !important; 
+  }
+
+  .bio-text { color: var(--text-main) !important; }
+  .nav-links a { color: var(--accent) !important; transition: opacity 0.2s ease !important; } 
+  .nav-links a:hover { opacity: 0.6 !important; }
+
+  /* Pill Button Styling */
+  .theme-btn {
+    background: transparent !important;
+    border: 1px solid var(--text-main) !important;
+    color: var(--text-main) !important;
+    border-radius: 50px !important;
+    padding: 8px 16px !important;
+    font-family: inherit !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    cursor: none !important; 
+    margin-top: 12px !important;
+    outline: none !important;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+    width: fit-content;
+  }
+
+  .index-num {
+    font-size: clamp(3rem, 4.5vw, 4.5rem) !important;
+    font-weight: 300 !important;
+    color: var(--accent) !important;
+    line-height: 1 !important;
+  }
+
+  .index-title {
+    font-size: clamp(1.5rem, 2.5vw, 2.5rem) !important;
+    font-weight: 400 !important;
+    line-height: 1.1 !important;
+    color: var(--text-main) !important;
+    transition: color 0.3s ease !important;
+    text-align: right !important; 
+  }
+  .index-row:hover .index-title {
+    color: var(--accent) !important;
+  }
+
+  .index-year { color: var(--text-main) !important; opacity: 0.6 !important; }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. DARK MODE TOGGLE LOGIC ---
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+      // Check current state on load
+      const isCurrentlyDark = document.documentElement.classList.contains('dark-theme');
+      themeBtn.innerText = isCurrentlyDark ? 'LIGHT MODE' : 'DARK MODE';
+      
+      themeBtn.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark-theme');
+        const isDarkNow = document.documentElement.classList.contains('dark-theme');
+        
+        // Save state and update button text
+        localStorage.setItem('theme', isDarkNow ? 'dark' : 'light');
+        themeBtn.innerText = isDarkNow ? 'LIGHT MODE' : 'DARK MODE';
+      });
+    }
+
+    // --- 2. CUSTOM CURSOR LOGIC ---
+    if (window.matchMedia("(pointer: fine)").matches) {
+      const customCursor = document.getElementById('custom-cursor');
+      const cursorCoords = document.getElementById('cursor-coords');
+      const listItems = document.querySelectorAll('.index-row');
+
+      let snappedRow = null;
+
+      listItems.forEach(item => {
+        item.addEventListener('mouseenter', () => snappedRow = item);
+        item.addEventListener('mouseleave', () => snappedRow = null);
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!customCursor || !cursorCoords) return;
+
+        if (snappedRow) {
+          if (!customCursor.classList.contains('snapped')) {
+            customCursor.classList.add('snapped');
+          }
+          const rect = snappedRow.getBoundingClientRect();
+          customCursor.style.left = rect.left + 'px';
+          customCursor.style.top = rect.top + 'px';
+          customCursor.style.width = rect.width + 'px';
+          customCursor.style.height = rect.height + 'px';
+          customCursor.style.transform = 'translate(0, 0)'; 
+        } else {
+          if (customCursor.classList.contains('snapped')) {
+            customCursor.classList.remove('snapped');
+            customCursor.style.width = 'auto'; 
+            customCursor.style.height = 'auto';
+          }
+          customCursor.style.left = e.clientX + 'px';
+          customCursor.style.top = e.clientY + 'px';
+          customCursor.style.transform = 'translate(-4px, -4px)';
+        }
+        cursorCoords.innerText = `X:${e.clientX} Y:${e.clientY}`;
+      });
+    }
+  });
+</script>
