@@ -7,6 +7,7 @@ role: "Mixed media & design"
 tools: ["Various"]
 gridSize: "standard"
 order: 6
+disabled: true
 
 # Media placeholders ready for when you build out the page
 heroType: ""

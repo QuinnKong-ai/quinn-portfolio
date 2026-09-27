@@ -7,6 +7,7 @@ role: "Product Design"
 tools: ["Figma", "Branding", "Strategy"]
 gridSize: "standard"
 order: 5
+disabled: true
 
 # Media placeholders ready for when you build out the page
 heroType: ""

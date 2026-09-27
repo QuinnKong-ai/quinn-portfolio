@@ -8,8 +8,8 @@ let localizedProjects = rawProjects && rawProjects.length > 0
   : [];
 
 const placeholders = [
-  { id: 'startup-cliq', slug: 'startup-cliq', data: { title: 'Start Up: CLIQ', year: '2026' } },
-  { id: 'archive', slug: 'archive', data: { title: 'Archive', year: '2026' } }
+  { id: 'startup-cliq', slug: 'startup-cliq', data: { title: 'Start Up: CLIQ', year: '2026', disabled: true } },
+  { id: 'archive', slug: 'archive', data: { title: 'Archive', year: '2026', disabled: true } }
 ];
 
 while (localizedProjects.length < 6 && placeholders.length > 0) {
@@ -61,10 +61,17 @@ while (localizedProjects.length < 6 && placeholders.length > 0) {
             const rawYear = project.data.year || "2026";
             const singleYear = rawYear.toString().split('-').pop().trim();
             
-            const linkTarget = project.slug || project.id;
+            const linkTarget = project.slug || project.id || '';
+            
+            // Hardcode the disable logic based on the slug/id so we don't have to fight the Astro schema
+            const isDisabled = linkTarget.toLowerCase().includes('cliq') || linkTarget.toLowerCase().includes('archive');
             
             return (
-              <a href={`/projects/${linkTarget}`} class="index-row">
+              <a 
+                href={isDisabled ? undefined : `/projects/${linkTarget}`} 
+                class="index-row"
+                style={isDisabled ? "opacity: 0.25; pointer-events: none; cursor: default;" : ""}
+              >
                 <div class="col-num index-num">{num}</div>
                 <div class="col-title index-title">{shortTitle}</div>
                 <div class="col-year index-year text-right">{singleYear}</div>
@@ -184,6 +191,9 @@ while (localizedProjects.length < 6 && placeholders.length > 0) {
       let snappedRow = null;
 
       listItems.forEach(item => {
+        // Prevent snapping on disabled rows
+        if (item.style.pointerEvents === 'none') return;
+        
         item.addEventListener('mouseenter', () => snappedRow = item);
         item.addEventListener('mouseleave', () => snappedRow = null);
       });

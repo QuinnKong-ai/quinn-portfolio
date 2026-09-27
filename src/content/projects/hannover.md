@@ -7,7 +7,7 @@ role: "Experience Design Associate"
 listText: "Interactive Exhibition Space Design"
 tools: ["Figma", "Mural", "Adobe Creative Suite", "Asset Coordination", "Interactive Media"]
 gridSize: "standard"
-order: 2
+order: 4
 
 # 1. MAIN HERO VIDEO (Cropped Widescreen)
 heroType: "video"

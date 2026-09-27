@@ -17,7 +17,6 @@ const data = entry.data;
 const cleanPath = (path) => {
   if (!path) return null;
   const noTag = path.replace('?grid', '');
-  // Safely bypasses local formatting for external links
   if (noTag.startsWith('http')) return noTag; 
   return encodeURI(noTag.replace(/^\/?public\/?/, '/'));
 };
@@ -28,7 +27,6 @@ const isVideo = (path) => {
   return noTag.match(/\.(mp4|webm|mov)$/i);
 };
 
-// NEW: Detects external video hosting platforms
 const isEmbed = (path) => {
   if (!path) return false;
   const noTag = path.replace('?grid', '');
@@ -42,22 +40,23 @@ const projectIdentifier = entry.slug || entry.id || '';
 const isSapphire = projectIdentifier.toLowerCase().includes('sapphire') || (data.title && data.title.toLowerCase().includes('sapphire'));
 const isNrf = projectIdentifier.toLowerCase().includes('nrf') || projectIdentifier.toLowerCase().includes('hannover') || (data.title && (data.title.toLowerCase().includes('nrf') || data.title.toLowerCase().includes('hannover')));
 const isExperienceCenters = projectIdentifier.toLowerCase().includes('experience') || (data.title && data.title.toLowerCase().includes('experience centers'));
+const isPopUps = projectIdentifier.toLowerCase().includes('pop-up') || projectIdentifier.toLowerCase().includes('pop') || (data.title && data.title.toLowerCase().includes('pop'));
 
-const ecBlocks = [];
-if (isExperienceCenters) {
-  const allEcImages = [ ...Array.from({length: 18}, (_, i) => data[`img${i + 1}`]) ].filter(Boolean);
+const customBlocks = [];
+if (isExperienceCenters || isPopUps) {
+  const allImages = [ ...Array.from({length: 18}, (_, i) => data[`img${i + 1}`]) ].filter(Boolean);
   
-  if (allEcImages.slice(0, 6).length > 0) {
-    ecBlocks.push({ type: 'text', id: 'ec-sec-1' });
-    ecBlocks.push({ type: 'images', items: allEcImages.slice(0, 6) });
+  if (allImages.slice(0, 6).length > 0) {
+    customBlocks.push({ type: 'text', id: 'sec-1' });
+    customBlocks.push({ type: 'images', items: allImages.slice(0, 6) });
   }
-  if (allEcImages.slice(6, 12).length > 0) {
-    ecBlocks.push({ type: 'text', id: 'ec-sec-2' });
-    ecBlocks.push({ type: 'images', items: allEcImages.slice(6, 12) });
+  if (allImages.slice(6, 12).length > 0) {
+    customBlocks.push({ type: 'text', id: 'sec-2' });
+    customBlocks.push({ type: 'images', items: allImages.slice(6, 12) });
   }
-  if (allEcImages.slice(12, 18).length > 0) {
-    ecBlocks.push({ type: 'text', id: 'ec-sec-3' });
-    ecBlocks.push({ type: 'images', items: allEcImages.slice(12, 18) });
+  if (allImages.slice(12, 18).length > 0) {
+    customBlocks.push({ type: 'text', id: 'sec-3' });
+    customBlocks.push({ type: 'images', items: allImages.slice(12, 18) });
   }
 }
 
@@ -79,7 +78,6 @@ let videoCount = 0;
 galleryMedia.forEach(rawSrc => {
   const isExplicitGrid = rawSrc.includes('?grid');
   
-  // Checks for BOTH local videos and external embeds
   if (isMediaBlock(rawSrc) && !isExplicitGrid) {
     if (currentImageChunk.length > 0) {
       layoutBlocks.push({ type: 'images', items: currentImageChunk });
@@ -92,12 +90,8 @@ galleryMedia.forEach(rawSrc => {
     layoutBlocks.push({ type: 'video', src: rawSrc });
     videoCount++;
     
-    if (videoCount === 1) {
-      layoutBlocks.push({ type: 'text', id: 'mid-video' });
-    }
-    if (videoCount === 2) {
-      layoutBlocks.push({ type: 'text', id: 'video-text' });
-    }
+    if (videoCount === 1) layoutBlocks.push({ type: 'text', id: 'mid-video' });
+    if (videoCount === 2) layoutBlocks.push({ type: 'text', id: 'video-text' });
     
   } else {
     currentImageChunk.push(rawSrc);
@@ -150,7 +144,6 @@ if (currentImageChunk.length > 0) {
       )}
     </header>
 
-    {/* HERO EMBED SUPPORT */}
     {data.heroSrc && (
       <div style={`width: 100vw; background: rgba(0, 85, 255, 0.02); margin-bottom: 120px; display: flex; justify-content: center; align-items: center; overflow: hidden; ${data.heroOrientation === 'crop' || isEmbed(data.heroSrc) ? 'aspect-ratio: 16/9; max-height: 70vh;' : 'aspect-ratio: 16/9;'}`}>
         {isEmbed(data.heroSrc) ? (
@@ -167,18 +160,20 @@ if (currentImageChunk.length > 0) {
       <Content />
     </div>
 
-    {isExperienceCenters && ecBlocks.length > 0 && (
+    {(isExperienceCenters || isPopUps) && customBlocks.length > 0 && (
       <div style="display: flex; flex-direction: column; width: 100%;">
-        {ecBlocks.map(block => {
-          if (block.type === 'text' && block.id === 'ec-sec-1') {
+        {customBlocks.map(block => {
+          
+          /* --- POP-UPS TEXT INJECTIONS --- */
+          if (block.type === 'text' && block.id === 'sec-1' && isPopUps) {
             return (
               <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
                 <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">IKEA Pop-up Store</h2>
-                <p>Led the visual and spatial design for the IKEA Pop-up Store located at SAP's headquarters in Walldorf. This included print and digital design, signages for the spaces, exterior visual material, and asset management. </p>
+                <p>Led the visual and spatial design for the IKEA Pop-up Store located at SAP's headquarters in Walldorf. This included print and digital design, signages for the spaces, exterior visual material, and asset management.</p>
               </div>
             );
           }
-          if (block.type === 'text' && block.id === 'ec-sec-2') {
+          if (block.type === 'text' && block.id === 'sec-2' && isPopUps) {
             return (
               <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
                 <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">New York Fashion Week Pop-Up</h2>
@@ -186,7 +181,25 @@ if (currentImageChunk.length > 0) {
               </div>
             );
           }
-          if (block.type === 'text' && block.id === 'ec-sec-3') {
+
+          /* --- EXPERIENCE CENTERS TEXT INJECTIONS --- */
+          if (block.type === 'text' && block.id === 'sec-1' && isExperienceCenters) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Global Experience Centers</h2>
+                <p>Managing the complete spatial branding of the primary Experience Center, setting the visual standard for executive briefings and multimedia installations.</p>
+              </div>
+            );
+          }
+          if (block.type === 'text' && block.id === 'sec-2' && isExperienceCenters) {
+            return (
+              <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
+                <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Singapore Experience Center</h2>
+                <p>Localized spatial branding and visual integration for the Singapore extension, ensuring absolute brand consistency across international architectural spaces.</p>
+              </div>
+            );
+          }
+          if (block.type === 'text' && block.id === 'sec-3' && isExperienceCenters) {
             return (
               <div style="max-width: 900px; margin: 0 auto 40px; padding: 0 40px; font-weight: 300; line-height: 1.7; font-size: 1.25rem; color: var(--text-main);">
                 <h2 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 24px;">Partner Exhibition Pods</h2>
@@ -194,6 +207,7 @@ if (currentImageChunk.length > 0) {
               </div>
             );
           }
+
           if (block.type === 'images') {
             return (
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; gap: 10px; margin-bottom: 120px;">
@@ -204,7 +218,7 @@ if (currentImageChunk.length > 0) {
                     ) : isVideo(src) ? (
                       <video src={cleanPath(src)} autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>
                     ) : (
-                      <img src={cleanPath(src)} alt="Experience Center Media" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                      <img src={cleanPath(src)} alt="Gallery Media" style="width:100%; height:100%; object-fit:cover; display:block;" />
                     )}
                   </div>
                 ))}
@@ -216,7 +230,7 @@ if (currentImageChunk.length > 0) {
       </div>
     )}
 
-    {!isExperienceCenters && layoutBlocks.length > 0 && (
+    {!isExperienceCenters && !isPopUps && layoutBlocks.length > 0 && (
       <div style="display: flex; flex-direction: column; width: 100%;">
         
         {layoutBlocks.map(block => {
@@ -327,7 +341,6 @@ if (currentImageChunk.length > 0) {
           </div>
         )}
 
-        {/* FINAL VIDEO EMBED SUPPORT */}
         {isSapphire && data.bottomVideoSrc && (
           <div style="width: 100%; margin-bottom: 80px; background: rgba(0, 85, 255, 0.02); aspect-ratio: 16/9;">
             {isEmbed(data.bottomVideoSrc) ? (
